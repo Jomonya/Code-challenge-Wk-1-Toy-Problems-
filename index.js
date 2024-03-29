@@ -36,7 +36,7 @@ function checkSpeed(speed) {
   }
 }
 
-
+//call function
 const speed = prompt("Enter speed of the car:");
 checkSpeed(parseInt(speed, 10));
 
@@ -45,30 +45,65 @@ checkSpeed(parseInt(speed, 10));
 
 // This function calculates the net salary based on basic salary, benefits, and deductions.
 function calculateNetSalary(basicSalary, benefits) {
-   // Assumed fixed rates and deductions for demonstration
-  const nhifDeduction = 1000; 
-  const nssfDeduction = 2000;
-  
+  // KRA tax rates 
+  const taxRates = {
+    0: 0.1,
+    18151: 0.25,
+    47051: 0.3
+  };
+
+  // NHIF and NSSF rates
+  const nhifRate = 0.05;
+  const nssfRate = 0.06;
+
+  // Calculate gross salary
   const grossSalary = basicSalary + benefits;
-  
-  // Tax calculation based on bands
-  let payee;
-  if (grossSalary <= 24000) {
-      payee = grossSalary * 0.10; // 10% for income up to KES 24,000
-  } else {
-      // Additional bands would be handled here with else-if statements
-      payee = 2400; // This is fixed for the first KES 24,000, and then you'd add on the calculations for the remaining amount as per the bands
+
+  // Calculate taxable income
+  const taxableIncome = grossSalary - nssfRate * basicSalary;
+
+  // Calculate PAYE (Pay As You Earn) based on tax brackets
+  let payee = 0;
+  for (const threshold in taxRates) {
+    if (taxableIncome > threshold) {
+      const taxableInBracket = taxableIncome - threshold;
+      payee += taxableInBracket * taxRates[threshold];
+      taxableIncome -= taxableInBracket;
+    } else {
+      payee += taxableIncome * taxRates[threshold];
+      break;
+    }
   }
-  
-  const netSalary = grossSalary - (payee + nhifDeduction + nssfDeduction);
-  
-  console.log("Gross Salary:", grossSalary);
-  console.log("Net Salary:", netSalary);
+
+  // Calculate NHIF deductions (capped at 1700)
+  const nhifDeductions = Math.min(nhifRate * grossSalary, 1700);
+
+  // Calculate NSSF deductions (capped at 2000)
+  const nssfDeductions = Math.min(nssfRate * basicSalary, 2000);
+
+  // Calculate net salary
+  const netSalary = grossSalary - payee - nhifDeductions - nssfDeductions;
+
+  return {
+    grossSalary: grossSalary,
+    payee: payee,
+    nhifDeductions: nhifDeductions,
+    nssfDeductions: nssfDeductions,
+    netSalary: netSalary
+  };
 }
 
-const basicSalary = parseFloat(prompt("Enter basic salary:"));
-const benefits = parseFloat(prompt("Enter benefits:"));
-calculateNetSalary(basicSalary, benefits);
+// Example usage
+const basicSalary = 100000;
+const benefits = 10000;
+
+const salaryBreakdown = calculateNetSalary(basicSalary, benefits);
+
+console.log("Gross Salary:", salaryBreakdown.grossSalary);
+console.log("PAYE:", salaryBreakdown.payee);
+console.log("NHIF Deductions:", salaryBreakdown.nhifDeductions);
+console.log("NSSF Deductions:", salaryBreakdown.nssfDeductions);
+console.log("Net Salary:", salaryBreakdown.netSalary);
 
   
  
